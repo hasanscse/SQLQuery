@@ -1,0 +1,105 @@
+
+
+CREATE TABLE [dbo].[PURCHASE_COST](
+	[PURCHASE_COST_ID] [int] IDENTITY(1,1) NOT NULL,
+	[PRODUCT_CODE] [nvarchar](50) NOT NULL,
+	[PURCHASE_COST_TYPE_ID] [int] NOT NULL,
+	[COST_AMOUNT] [decimal](18, 2) NOT NULL,
+	[COMPANY_ID] [nvarchar](50) NOT NULL,
+	[BRANCH_ID] [nvarchar](50) NOT NULL
+) ON [PRIMARY]
+
+GO
+
+
+
+
+-------------------
+
+
+
+
+CREATE TABLE [dbo].[PURCHASE_COST_TYPE](
+	[PURCHASE_COST_TYPE_ID] [int] IDENTITY(1,1) NOT NULL,
+	[PURCHASE_COST_TYPE_NAME] [nvarchar](500) NOT NULL,
+	[COMPANY_ID] [nvarchar](50) NOT NULL,
+	[BRANCH_ID] [nvarchar](50) NOT NULL
+) ON [PRIMARY]
+
+GO
+
+
+--------------------------
+
+
+
+
+CREATE TABLE [dbo].[PURCHASE_DETAILS_COST](
+	[PURCHASE_DETAILS_COST_ID] [int] IDENTITY(1,1) NOT NULL,
+	[PURCHASE_INVOICE_NO] [nvarchar](50) NOT NULL,
+	[PRODUCT_CODE] [nvarchar](50) NOT NULL,
+	[PURCHASE_COST_TYPE_ID] [int] NOT NULL,
+	[COST_AMOUNT] [decimal](18, 2) NOT NULL,
+	[COMPANY_ID] [nvarchar](50) NOT NULL,
+	[BRANCH_ID] [nvarchar](50) NOT NULL
+) ON [PRIMARY]
+
+GO
+
+
+
+
+
+
+----------------------------------------------
+
+
+
+
+
+ALTER PROC [dbo].[FSP_PRODUCT_GN]
+(
+@PRODUCT_NAME nvarchar(1050),
+@COMPANY_ID nvarchar(50),
+@BRANCH_ID nvarchar(50)
+)
+AS
+
+
+
+
+
+
+
+
+
+SELECT      p.PRODUCT_CODE, p.PRODUCT_NAME, p.PRODUCT_DESCRIPTION,p.SUBCATEGORY_ID, p.CATEGORY_ID, p.BRAND_ID, p.UNIT_ID, p.SERIAL_AVAILABLE, p.PURCHASE_PRICE, 
+ p.SALES_PRICE, p.WARRANTY_DAYS, p.PRODUCT_STATUS, p.MAKE_BY, p.MAKE_DT, p.STOCK_QUANTITY, 
+                      p.OPENING_DATE, p.OPENING_STOCK_QUANTITY, p.PURCHASED_PRICE,P.SALES_VAT, 
+                      s.SUBCATEGORY_NAME, 
+                       u.UNIT_NAME, 
+                      c.CATEGORY_NAME, 
+                      b.BRAND_NAME,p.REORDER_LEVEL
+FROM         PRODUCT p INNER JOIN
+                      PRODUCT_SUBCATEGORY s ON p.SUBCATEGORY_ID = s.SUBCATEGORY_ID INNER JOIN
+                      PRODUCT_CATEGORY c ON p.CATEGORY_ID = c.CATEGORY_ID INNER JOIN
+                      PRODUCT_UNIT_TYPES u ON p.UNIT_ID = u.UNIT_ID INNER JOIN
+                      PRODUCT_BRAND b ON p.BRAND_ID = b.BRAND_ID
+where p.PRODUCT_NAME=@PRODUCT_NAME and p.COMPANY_ID=@COMPANY_ID and p.BRANCH_ID=@BRANCH_ID
+
+
+
+
+
+-----------------------------------------------
+
+
+
+
+
+
+
+
+
+
+

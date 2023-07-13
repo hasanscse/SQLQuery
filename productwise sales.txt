@@ -1,0 +1,67 @@
+
+
+
+ALTER proc [dbo].[RSP_PRODCUTWISE_SALES_REPORT]
+@FROM_DATE datetime,
+@TO_DATE datetime,
+@COMPANY_ID varchar(10),
+@BRANCH_ID varchar(10),
+@BUYER_SUPPLIER_ID varchar(10)
+
+as
+declare @total_discount decimal(18,2)
+declare @buyer_name  varchar(10)
+set @buyer_name =
+(
+select BUYER_SUPPLIER_NAME from BUYER_SUPPLIER_INFO
+where BUYER_SUPPLIER_ID=@BUYER_SUPPLIER_ID
+)
+
+set  @total_discount =
+isnull((
+select SUM (TOTAL_DISCOUNT) from SALES s
+where  (CAST(CONVERT(varchar,s.MAKE_DT, 106) AS datetime) BETWEEN 
+(CAST(CONVERT(varchar,@FROM_DATE, 106) AS datetime)) AND 
+(CAST(CONVERT(varchar,@TO_DATE, 106) AS datetime))) AND
+CANCEL_FLAG=0 and s.COMPANY_ID=@COMPANY_ID 
+and s.BRANCH_ID = @BRANCH_ID
+AND ((s.BUYER_SUPPLIER_ID=@BUYER_SUPPLIER_ID and s.COMPANY_ID=@COMPANY_ID) OR (@BUYER_SUPPLIER_ID='' and s.COMPANY_ID=@COMPANY_ID))
+),0)
+
+
+declare @total_vat decimal(18,2)
+set  @total_vat =
+isnull((
+select SUM (TOTAL_VAT) from SALES s
+where  (CAST(CONVERT(varchar,s.MAKE_DT, 106) AS datetime) BETWEEN 
+(CAST(CONVERT(varchar,@FROM_DATE, 106) AS datetime)) AND 
+(CAST(CONVERT(varchar,@TO_DATE, 106) AS datetime))) AND
+CANCEL_FLAG=0 and s.COMPANY_ID=@COMPANY_ID 
+and s.BRANCH_ID = @BRANCH_ID
+AND ((s.BUYER_SUPPLIER_ID=@BUYER_SUPPLIER_ID and s.COMPANY_ID=@COMPANY_ID) OR (@BUYER_SUPPLIER_ID='' and s.COMPANY_ID=@COMPANY_ID))
+),0)
+
+
+select SUM(SD.QUANTITY)TOTAL_QUANTITY,isnull(SUM(SD.SALES_PRICE*SD.QUANTITY),0.0)TOTAL_AMOUNT,
+@FROM_DATE FROM_DATE,@TO_DATE TO_DATE,SD.SALES_PRICE,
+sd.PRODUCT_CODE,p.PRODUCT_NAME,isnull(@total_discount,0.0) as TOTAL_DISCOUNT,isnull(@total_vat,0.0) as TOTAL_VAT, 
+c.COMPANY_NAME  ,
+--'Productwise Sales Report' REPORT_NAME 
+@buyer_name REPORT_NAME
+from SALES s inner join SALES_DETAILS sd 
+on s.SALES_INVOICE_NO=sd.SALES_INVOICE_NO
+and s.COMPANY_ID=sd.COMPANY_ID and s.BRANCH_ID=sd.BRANCH_ID
+inner join PRODUCT p on sd.PRODUCT_CODE=p.PRODUCT_CODE
+and  p.COMPANY_ID=sd.COMPANY_ID and p.BRANCH_ID=sd.BRANCH_ID
+inner join COMPANY c on
+p.COMPANY_ID=c.COMPANY_ID
+
+
+where  (CAST(CONVERT(varchar,s.MAKE_DT, 106) AS datetime) BETWEEN 
+(CAST(CONVERT(varchar,@FROM_DATE, 106) AS datetime)) AND 
+(CAST(CONVERT(varchar,@TO_DATE, 106) AS datetime))) AND
+CANCEL_FLAG=0 and s.COMPANY_ID=@COMPANY_ID 
+and s.BRANCH_ID = @BRANCH_ID
+AND ((s.BUYER_SUPPLIER_ID=@BUYER_SUPPLIER_ID and s.COMPANY_ID=@COMPANY_ID) OR (@BUYER_SUPPLIER_ID='' and s.COMPANY_ID=@COMPANY_ID))
+group by sd.PRODUCT_CODE,p.PRODUCT_NAME,c.COMPANY_NAME,SD.SALES_PRICE
+order by TOTAL_QUANTITY DESC

@@ -1,0 +1,97 @@
+
+
+ALTER proc [dbo].[RSP_SALES_REPORT_LIST_ONLY]
+@FROM_DATE datetime,
+@TO_DATE datetime,
+@COMPANY_ID varchar(10),
+@BRANCH_ID NVARCHAR(10),
+@MAKE_BY varchar(10),
+@BUYER_SUPPLIER_ID varchar(10)
+AS
+
+
+
+declare @total_exchange_return decimal(18,2)
+declare @total_return_only decimal(18,2)
+
+set  @total_exchange_return =
+(
+select SUM (TOTAL_RETURN_AMOUNT) from SALES_RETURN
+where  (CAST(CONVERT(varchar,MAKE_DT, 106) AS datetime) BETWEEN 
+(CAST(CONVERT(varchar,@FROM_DATE, 106) AS datetime)) AND 
+(CAST(CONVERT(varchar,@TO_DATE, 106) AS datetime))) AND
+REMARKS='Exchange Product'  and
+CANCEL_FLAG=0 
+)
+
+
+
+set  @total_return_only =
+(
+select SUM (TOTAL_RETURN_AMOUNT) from SALES_RETURN
+where  (CAST(CONVERT(varchar,MAKE_DT, 106) AS datetime) BETWEEN 
+(CAST(CONVERT(varchar,@FROM_DATE, 106) AS datetime)) AND 
+(CAST(CONVERT(varchar,@TO_DATE, 106) AS datetime))) AND
+REMARKS='Sales Return'  and
+CANCEL_FLAG=0 
+)
+
+
+
+
+
+
+set nocount on
+SELECT   distinct  s.SALES_INVOICE_NO,
+s.TOTAL_AMOUNT TOTAL_AMOUNT,s.MAKE_DT,
+ s.TOTAL_VAT,
+ 
+ case when (s.COLLECTED_ACCOUNT_ID != 9019012901901200020001) Then s.TOTAL_AMOUNT  else 0 end PREVIOUS_DUES,
+ --s.TOTAL_DISCOUNT,
+ 
+ case when (s.COLLECTED_ACCOUNT_ID = 9019012901901200020001) Then s.TOTAL_AMOUNT  else 0 end 
+ --bs.DISCOUNT
+  as COLLECTED_AMOUNT,
+ (s.TOTAL_AMOUNT + s.TOTAL_VAT- s.TOTAL_DISCOUNT)GRAND_TOTAL,
+  s.BUYER_SUPPLIER_ID, 
+                      s.COMPANY_ID, COMPANY.COMPANY_NAME, COMPANY.ADDRESS, 
+                      COMPANY.PHONE, COMPANY.FAX,s.EMI_FLAG as EMAIL, COMPANY.URL, 
+                     -- sd.PRODUCT_CODE, p.PRODUCT_NAME, 
+--sd.QUANTITY, sd.SALES_PRICE, sd.SALES_VAT,sd.SALES_VAT_AMOUNT_TOTAL,
+-- p.BRAND_ID, pb.BRAND_NAME, sd.UNIT_ID, 
+                     -- put.UNIT_NAME,
+--bs.BUYER_SUPPLIER_NAME,
+ cast ( bs.BUYER_SUPPLIER_NAME as nvarchar(max))+' 
+ ('  + cast (s.REMARKS as nvarchar(max) )+')' as BUYER_SUPPLIER_NAME,
+isnull(@total_exchange_return,0) GIVEN_AMOUNT,isnull(@total_return_only,0) CHANGE_AMOUNT,
+@FROM_DATE FROM_DATE,
+@TO_DATE  TO_DATE
+FROM         COMPANY INNER JOIN
+                      SALES s 
+                       ON COMPANY.COMPANY_ID = s.COMPANY_ID
+                      --INNER JOIN
+                     -- SALES_DETAILS sd ON s.SALES_INVOICE_NO = sd.SALES_INVOICE_NO
+                    --  and s.COMPANY_ID=sd.COMPANY_ID
+                      -- ON COMPANY.COMPANY_ID = s.COMPANY_ID INNER JOIN
+                     -- PRODUCT p ON sd.PRODUCT_CODE = p.PRODUCT_CODE INNER JOIN
+                     -- PRODUCT_BRAND pb ON p.BRAND_ID = pb.BRAND_ID INNER JOIN
+                     -- PRODUCT_UNIT_TYPES put ON sd.UNIT_ID = put.UNIT_ID
+                      --and sd.COMPANY_ID=put.COMPANY_ID
+						INNER JOIN BUYER_SUPPLIER_INFO bs
+						oN s.BUYER_SUPPLIER_ID=bs.BUYER_SUPPLIER_ID
+						and s.COMPANY_ID=bs.COMPANY_ID
+						AND s.BRANCH_ID=bs.BRANCH_ID
+where  (CAST(CONVERT(varchar,s.MAKE_DT, 106) AS datetime) BETWEEN 
+(CAST(CONVERT(varchar,@FROM_DATE, 106) AS datetime)) AND 
+(CAST(CONVERT(varchar,@TO_DATE, 106) AS datetime))) AND
+CANCEL_FLAG=0 and
+RETURN_FLAG=0
+and s.COMPANY_ID=@COMPANY_ID
+and s.BRANCH_ID=@BRANCH_ID
+AND ((s.BUYER_SUPPLIER_ID=@BUYER_SUPPLIER_ID and s.COMPANY_ID=@COMPANY_ID) OR (@BUYER_SUPPLIER_ID='' and s.COMPANY_ID=@COMPANY_ID))
+order by  s.SALES_INVOICE_NO
+
+
+
+
+

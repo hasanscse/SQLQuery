@@ -1,0 +1,8 @@
+CREATE TABLE [dbo].[REMEMBER_LOGIN](
+	[USER_NAME] [nvarchar](50) NULL,
+	[PASSWORD] [nvarchar](50) NULL,
+	[STATUS] [int] NULL,
+	[COMPANY_ID] [nvarchar](50) NULL,
+	[BRANCH_ID] [nvarchar](50) NULL
+) ON [PRIMARY]
+

@@ -1,0 +1,13 @@
+WITH CTE AS
+(
+SELECT *,ROW_NUMBER() OVER (PARTITION BY col1,col2,col3 ORDER BY col1,col2,col3) AS RN
+FROM MyTable
+)
+
+DELETE FROM CTE WHERE RN<>1
+
+
+
+--------------
+delete [EBHUBON].[dbo].[old_pro]
+where [barcode]  in (select PRODUCT_CODE from PRODUCT )

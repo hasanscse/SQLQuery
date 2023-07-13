@@ -1,0 +1,55 @@
+
+
+
+ALTER PROC [dbo].[FSP_BUYER_SUPPLIER_INFO_SEARCH]
+@COMPANY_ID nvarchar(30),
+@BRANCH_ID nvarchar(30),
+@KEYWORD nvarchar(300)
+AS
+SELECT [BUYER_SUPPLIER_ID]
+      ,[BUYER_SUPPLIER_NAME]
+      --,[COMPANY_NAME]
+      --,[ADDRESS]
+      --,[ZONE_ID]
+      --,[COUNTRY_ID]
+      --,[DISTRICT_ID]
+      --,[PROFESSION_ID]
+      ,[PHONE]
+      --,[OPENNING_DATE]
+      --,[OPENNING_BALANCE]
+      --,[COMPANY_ID]
+      --,[IS_ACTIVE]
+      --,[POST_CODE]
+      --,[BUYER_SUPPLIER_FLAG]
+      --,[MAKE_BY]
+      --,[MAKE_DT]
+      --,[BS_ACCOUNT_BALANCE]
+      --,[MANDATORY]
+      --,[DISCOUNT]
+      --,[BRANCH_ID]
+      --,[BOOTH_ID]
+      --,[MEDICINE_SUPPLIER_FLAG]
+      ,[MEMBER_ID]
+      --,[BUYER_IMAGE]
+      --,[NXT_PAYMENT_DT]
+      --,[END_DT]
+      --,[EMI_TYPE]
+      --,[EMI_AMOUNT]
+      --,[SALES_POINT]
+      --,[BUYER_TYPE]
+      --,[CREDIT_LIMIT]
+      --,[SALES_DT]
+      --,[REFFERENCE_NAME]
+      --,[REFFERENCE_ADDRESS]
+      --,[REFFERENCE_PHONE]
+  FROM [dbo].[BUYER_SUPPLIER_INFO] B
+
+   where B.COMPANY_ID=@COMPANY_ID    and B.BRANCH_ID=@BRANCH_ID                 
+                                
+					and
+					( B.BUYER_SUPPLIER_NAME  like  '%' + @KEYWORD + '%' )
+					or
+				(	B.MEMBER_ID like '%' + @KEYWORD + '%' )
+					OR 
+					(	B.PHONE like '%' + @KEYWORD + '%' )
+					 --order by PRODUCT_NAME

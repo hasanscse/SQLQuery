@@ -1,0 +1,8 @@
+Select pro_code, substring(pro_code,2, len(pro_code)) from prod
+
+
+--Select EmpName, substring(EmpName,2, len(EmpName)-2) from [Employee]  
+
+--update prod
+
+--set pro_code = substring(pro_code,2, len(pro_code))

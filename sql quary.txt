@@ -1,0 +1,35 @@
+FUNCTION==================================================================
+CREATE FUNCTION schema_name.function_name (parameter_list)  
+RETURNS data_type AS  
+BEGIN  
+    statements  
+    RETURN value  
+END   
+
+===================================================================
+ 
+CREATE FUNCTION dbo.tfn_CoalesceConcat
+(
+  @state varchar(100)
+)
+RETURNS NVARCHAR(MAX)
+AS 
+BEGIN
+  DECLARE @str NVARCHAR(MAX);
+ 
+  SELECT @str = COALESCE(@str + ', ', '') + CITY
+    FROM dbo.STATE
+	WHERE state = @state
+	ORDER BY state;
+ 
+  RETURN (@str);
+END
+GO
+
+==============================================
+
+CREATE INDEX idx_pname
+ON Persons (LastName, FirstName);
+
+
+===================================

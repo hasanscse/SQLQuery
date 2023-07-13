@@ -1,0 +1,4 @@
+update old_product
+set  p_name = p_name+' '+cast (id as varchar(10))
+
+where p_name= 'Flormax 500 ml'

@@ -1,0 +1,43 @@
+INSERT INTO [dbo].[BUYER_SUPPLIER_INFO]
+        
+        
+     SELECT       ID
+           ,NAME
+           ,''
+           ,''
+           ,1
+           ,1
+           ,1
+           ,1
+           ,PHONE
+           ,GETDATE()
+           ,0
+           ,1
+           ,1
+           ,1
+           ,'C'
+           ,'KING'
+           ,GETDATE()
+           ,0
+           ,0
+           ,0
+           ,1
+           ,1
+           ,0
+           ,PHONE
+           ,''
+           ,GETDATE()
+           ,GETDATE()
+           ,0
+           ,0
+           ,0
+           ,1
+           ,0
+           ,GETDATE()
+           ,1
+           ,1
+           ,1
+    FROM [dbo].BUYER
+    
+    
+  

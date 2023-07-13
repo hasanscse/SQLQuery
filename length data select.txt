@@ -1,0 +1,33 @@
+select PRODUCT_CODE 
+from PRODUCT where LEN(PRODUCT_CODE) < 9
+
+
+--cast(PRODUCT_CODE as char(4)) as PRODUCT_CODE
+--  len(3)
+
+--SELECT MIN(LEN(PRODUCT_CODE)) FROM PRODUCT;
+
+-- 0000001
+-- 0000099
+-- 0000999
+-- 0009999
+-- 0099999
+
+--update  PRODUCT  
+--set  PRODUCT_CODE = '00'+PRODUCT_CODE
+--where LEN(PRODUCT_CODE) < 6
+
+
+--- select RIGHT('abcdeffff',4)
+
+
+--SELECT EmployeeName FROM EmployeeTable WHERE LEN(EmployeeName) > 4
+
+
+
+
+select PRODUCT_CODE 
+--select RIGHT(PRODUCT_CODE,4)
+from PRODUCT 
+where LEFT(PRODUCT_CODE,3) = '000' and LEN(PRODUCT_CODE) > 9
+--or LEFT(PRODUCT_CODE,3)= 'AAN'

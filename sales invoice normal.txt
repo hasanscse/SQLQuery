@@ -1,0 +1,133 @@
+
+
+ALTER proc [dbo].[RSP_SALES_INVOICE_GK]
+
+@SALES_INVOICE_NO NVARCHAR(30),
+@COMPANY_ID varchar(10),
+@BRANCH_ID varchar(10)
+--@GIVEN_AMOUNT NVARCHAR(30),
+--@CHANGE_AMOUNT NVARCHAR(30)
+as
+
+declare @software_type decimal(18,2)
+
+set  @software_type =
+(
+select [TYPE_ID] from SOFTWARE_TYPE
+
+where  IS_ACTIVE = 1
+)
+
+
+
+
+
+SELECT     S.SALES_INVOICE_NO, S.TOTAL_AMOUNT, S.TOTAL_VAT, S.PREVIOUS_DUES, 
+S.TOTAL_DISCOUNT, S.COLLECTED_AMOUNT,
+						case when (S.BUYER_SUPPLIER_ID=1)
+                      Then S.MOBILE_NUMBER
+                      else
+                      B.PHONE end as UNIT_ID,
+                      S.BUYER_SUPPLIER_ID, 
+                      ''+ s.MAKE_BY
+                      AS MAKE_BY, 
+                      ''+ CONVERT(varchar(50), S.MAKE_DT) as MAKE_DT , 
+                      
+                      rs.RESTURANT_TABLE_NAME as RETURN_FLAG, 
+                      B.MEMBER_ID as COMPANY_ID,
+                      case when (S.BUYER_SUPPLIER_ID=1)
+                     -- Then ''+ S.CUSTOMER_NAME 
+                       Then ''+ S.CUSTOMER_NAME 
+                      else B.BUYER_SUPPLIER_NAME end
+                      as CANCEL_FLAG, 
+                      
+                      
+                       case when (S.BUYER_SUPPLIER_ID=1)
+                      Then S.CUSTOMER_NAME 
+                      else B.BUYER_SUPPLIER_NAME end
+                      as BUYER_SUPPLIER_NAME,
+                       c.ADDRESS, C.COMPANY_NAME,C.ADDRESS, 
+                     ''+ C.PHONE as PHONE, C.FAX, ''+ C.EMAIL as EMAIL, ''+ C.URL as URL, SD.PRODUCT_CODE,
+                      --s.REMARKS,
+                      U.UNIT_NAME,
+                      case when (SD.QUANTITY<0) Then P.PRODUCT_NAME+' (Return Product)' else P.PRODUCT_NAME 
+                      end PRODUCT_NAME,
+                        BR.BRAND_NAME, p.PRODUCT_DESCRIPTION,
+                        
+                      SD.QUANTITY, SD.SALES_PRICE, SD.SALES_DISCOUNT as SALES_VAT,ac.DESCRIPTION as 
+                      SERIAL_AVAILABLE,
+                      SD.SALES_VAT_AMOUNT_TOTAL,(SD.SALES_PRICE*ABS(SD.QUANTITY))PRODUCTWISE_TOTAL,
+						(S.TOTAL_AMOUNT+TOTAL_VAT-TOTAL_DISCOUNT)GRAND_TOTAL,
+						(S.TOTAL_AMOUNT+TOTAL_VAT-COLLECTED_AMOUNT-TOTAL_DISCOUNT+PREVIOUS_DUES)DUE,
+					 ISNULL(GIVEN_AMOUNT,0)GIVEN_AMOUNT,ISNULL(CHANGE_AMOUNT,0)CHANGE_AMOUNT,
+dbo.fnNumberToWordsTaka(S.TOTAL_AMOUNT+TOTAL_VAT-TOTAL_DISCOUNT) as INWORD,
+CASE
+    WHEN @software_type=1
+    
+     THEN 'Table No# '+ s.EMI_FLAG 
+     else 
+ CASE when (P.WARRANTY_DAYS >0 )
+Then
+'Serial- '+dbo.GET_SERIAL_LIST_FOR_SALES(sd.PRODUCT_CODE,S.COMPANY_ID,
+S.SALES_INVOICE_NO)+' -  Warranty '+CONVERT(varchar(10), p.WARRANTY_DAYS) +' Day' 
+else dbo.GET_SERIAL_LIST_FOR_SALES(sd.PRODUCT_CODE,S.COMPANY_ID,S.SALES_INVOICE_NO) end
+     
+      end as SERIAL,
+    
+
+--case when (P.WARRANTY_DAYS >0 )
+--Then
+--'Serial- '+dbo.GET_SERIAL_LIST_FOR_SALES(sd.PRODUCT_CODE,S.COMPANY_ID,
+--S.SALES_INVOICE_NO)+' -  Warranty '+CONVERT(varchar(10), p.WARRANTY_DAYS) +' Day' 
+--else dbo.GET_SERIAL_LIST_FOR_SALES(sd.PRODUCT_CODE,S.COMPANY_ID,S.SALES_INVOICE_NO) end
+--as SERIAL,
+
+--s.EMI_FLAG as SERIAL,
+
+--SOI.OTHERS_REVENUE_NOTE as REMARKS, SOI.OTHERS_REVENUE_AMOUNT as INVOICE_NOTES_DETAILS,
+--case when (S.BUYER_SUPPLIER_ID!=1)
+--                      Then
+                      
+--'Your Points - '+ convert(varchar,convert(decimal(8,2),B.SALES_POINT))
+-- else ''  end
+-- INVOICE_NOTES_DETAILS 
+
+--case when (S.BUYER_SUPPLIER_ID!=1)
+--                      Then
+                      
+--'Your Points - '+B.SALES_POINT
+-- else 'a'end
+ --INVOICE_NOTES_DETAILS ,
+--'Phone : '+C.Phone +' '+'Fax : '+C.Fax+' '+'E-Mail : '+ C.Email 
+case when (S.BUYER_SUPPLIER_ID=1)
+                      Then '' 
+                      else B.ADDRESS end as ADDRESS2,
+BB.BRANCH_NAME,BB.BRANCH_ADDRESS
+FROM         
+                      SALES S INNER JOIN
+                      SALES_DETAILS SD ON S.SALES_INVOICE_NO = SD.SALES_INVOICE_NO 
+                      and  S.COMPANY_ID=SD.COMPANY_ID AND S.BRANCH_ID=SD.BRANCH_ID
+                      INNER JOIN
+                      BUYER_SUPPLIER_INFO B ON S.BUYER_SUPPLIER_ID = B.BUYER_SUPPLIER_ID 
+                      and  S.COMPANY_ID=B.COMPANY_ID AND S.BRANCH_ID=B.BRANCH_ID
+					  INNER JOIN COMPANY C 	ON 
+                      C.COMPANY_ID = S.COMPANY_ID INNER JOIN
+                      PRODUCT P ON SD.PRODUCT_CODE = P.PRODUCT_CODE 
+                      and  SD.COMPANY_ID=P.COMPANY_ID AND SD.BRANCH_ID=P.BRANCH_ID
+                      INNER JOIN
+                      PRODUCT_UNIT_TYPES U ON SD.UNIT_ID = U.UNIT_ID 
+                      and  SD.COMPANY_ID=U.COMPANY_ID 
+                      INNER JOIN
+                      PRODUCT_BRAND BR ON P.BRAND_ID = BR.BRAND_ID
+                      and  P.COMPANY_ID=BR.COMPANY_ID 
+					  LEFT OUTER JOIN SALES_OTHER_INFO SOI ON S.SALES_INVOICE_NO=SOI.SALES_INVOICE_NO
+					  and  S.COMPANY_ID=SOI.COMPANY_ID AND S.BRANCH_ID=SOI.BRANCH_ID
+					  INNER JOIN BRANCH BB ON S.BRANCH_ID=BB.BRANCH_ID 
+					  AND S.COMPANY_ID=BB.COMPANY_ID
+					  inner join ACCOUNTS ac on s.COLLECTED_ACCOUNT_ID=ac.ACCOUNTS_CODE 
+					  AND S.COMPANY_ID=ac.COMPANY_ID AND S.BRANCH_ID=ac.BRANCH_ID
+					  LEFT OUTER JOIN RESTURANT_TABLE rs on s.RESTURANT_TABLE_ID = rs.RESTURANT_TABLE_ID
+						AND S.COMPANY_ID=rs.COMPANY_ID AND S.BRANCH_ID=rs.BRANCH_ID
+WHERE S.SALES_INVOICE_NO=@SALES_INVOICE_NO and s.COMPANY_ID=@COMPANY_ID AND S.BRANCH_ID=@BRANCH_ID
+
+order by sd.SALES_DETAILS_ID DESC

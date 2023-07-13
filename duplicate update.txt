@@ -1,0 +1,9 @@
+ 
+WITH CTE AS
+(
+SELECT *,ROW_NUMBER() OVER (PARTITION BY name ORDER BY name) AS RN
+FROM buyer
+)
+update    CTE
+set name = name+id
+ WHERE RN<>1

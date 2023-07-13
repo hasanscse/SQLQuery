@@ -1,0 +1,42 @@
+
+
+
+ALTER proc [dbo].[RSP_ADJUSTMENT_LIST]
+
+@BUYER_SUPPLIER_ID varchar(10),
+@FROM_DATE datetime,
+@TO_DATE datetime,
+@COMPANY_ID varchar(10),
+@BRANCH_ID varchar(10)
+
+AS
+
+SELECT [ADJUSTMENT_ID]
+      ,[DATE_TIME]
+      ,c.[BUYER_SUPPLIER_ID]
+      ,[REASON]
+      ,[AMOUNT]
+      ,[ADJUSTMENT_TYPE]
+      ,[APPROVAL]
+      ,[APPROVAL_BY]
+      ,[APPROVAL_DATE]
+      ,[VOUCHER_NO]
+      ,c.[COMPANY_ID]
+      ,[INVOICE_NO]
+      ,c.[MAKE_BY]
+      ,[MAKE_DATE]
+      ,b.BUYER_SUPPLIER_NAME
+  FROM [INVENTORY_MASTER].[dbo].[ADJUSTMENT] c
+  inner join BUYER_SUPPLIER_INFO b
+  on c.BUYER_SUPPLIER_ID=b.BUYER_SUPPLIER_ID
+
+
+
+                      
+ where  (CAST(CONVERT(varchar,c.MAKE_DATE, 106) AS datetime) BETWEEN 
+(CAST(CONVERT(varchar,@FROM_DATE, 106) AS datetime)) AND 
+(CAST(CONVERT(varchar,@TO_DATE, 106) AS datetime))) AND
+APPROVAL='A' AND c.COMPANY_ID=@COMPANY_ID 
+AND ((c.BUYER_SUPPLIER_ID=@BUYER_SUPPLIER_ID and c.COMPANY_ID=@COMPANY_ID) OR (@BUYER_SUPPLIER_ID='' and c.COMPANY_ID=@COMPANY_ID))
+
+

@@ -1,0 +1,177 @@
+
+
+
+ALTER PROC [dbo].[FSP_BUYER_SUPPLIER_INFO_GET_ZONE]
+@ZONE_ID varchar(10),
+@BRANCH_ID NVARCHAR(10),
+@COMPANY_ID varchar(10)
+AS
+
+
+
+
+ 
+SELECT     BUYER_SUPPLIER_ID, BUYER_SUPPLIER_NAME, COMPANY_NAME,
+ ADDRESS, ZONE_ID, COUNTRY_ID, DISTRICT_ID, PROFESSION_ID, PHONE,MEMBER_ID, 
+OPENNING_DATE, OPENNING_BALANCE, COMPANY_ID, 
+case when IS_ACTIVE=1 then 'Active' else 'Inactive' end IS_ACTIVE , 
+
+POST_CODE,
+BUYER_SUPPLIER_FLAG, MAKE_BY, MAKE_DT,BS_ACCOUNT_BALANCE
+FROM         BUYER_SUPPLIER_INFO
+where  (BUYER_SUPPLIER_FLAG='C' OR BUYER_SUPPLIER_FLAG='B')
+AND ZONE_ID =  @ZONE_ID
+and IS_ACTIVE=1
+and COMPANY_ID=@COMPANY_ID 
+and BRANCH_ID=@BRANCH_ID
+order by BUYER_SUPPLIER_NAME ASC
+
+
+
+
+
+
+
+
+
+
+
+
+.................................................................
+
+ALTER proc [dbo].[RSP_SALES_ORDER_LIST]
+@FROM_DATE datetime,
+@TO_DATE datetime,
+@COMPANY_ID varchar(10),
+@BRANCH_ID NVARCHAR(10),
+@MAKE_BY varchar(10)
+AS
+
+
+
+
+
+
+
+
+set nocount on
+SELECT   distinct  s.QUOTATION_INVOICE_NO as SALES_INVOICE_NO,
+s.TOTAL_AMOUNT TOTAL_AMOUNT,s.MAKE_DT,
+ s.TOTAL_VAT,
+ 
+ case when (s.COLLECTED_ACCOUNT_ID != 9019012901901200020001) 
+ Then s.TOTAL_AMOUNT  else 0 end PREVIOUS_DUES,
+ s.TOTAL_DISCOUNT,
+ 
+ --case when (s.COLLECTED_ACCOUNT_ID = 9019012901901200020001) Then s.TOTAL_AMOUNT  else 0 end 
+ COLLECTED_AMOUNT,
+ (s.TOTAL_AMOUNT + s.TOTAL_VAT- s.TOTAL_DISCOUNT)GRAND_TOTAL,
+  s.BUYER_SUPPLIER_ID, 
+                      s.COMPANY_ID, COMPANY.COMPANY_NAME, COMPANY.ADDRESS, 
+                      COMPANY.PHONE, 
+                      case when (s.STATUS=0)
+                      Then 'Not Completed' else
+                      'Completed - '+s.SALES_INVOICE_NO end
+                      as FAX,
+                      
+                      bs.PHONE as EMAIL, COMPANY.URL,
+ bs.BUYER_SUPPLIER_NAME+'('+ bs.PHONE +')'as BUYER_SUPPLIER_NAME,
+@FROM_DATE FROM_DATE,
+@TO_DATE  TO_DATE
+FROM         COMPANY INNER JOIN
+                      QUOTATION s 
+                       ON COMPANY.COMPANY_ID = s.COMPANY_ID                     
+						INNER JOIN BUYER_SUPPLIER_INFO bs
+						oN s.BUYER_SUPPLIER_ID=bs.BUYER_SUPPLIER_ID
+						and s.COMPANY_ID=bs.COMPANY_ID
+where  (CAST(CONVERT(varchar,s.MAKE_DT, 106) AS datetime) BETWEEN 
+(CAST(CONVERT(varchar,@FROM_DATE, 106) AS datetime)) AND 
+(CAST(CONVERT(varchar,@TO_DATE, 106) AS datetime))) AND
+FLAG='SO' 
+
+and s.COMPANY_ID=@COMPANY_ID
+and s.BRANCH_ID=@BRANCH_ID
+
+order by  s.QUOTATION_INVOICE_NO
+
+
+
+
+
+..................................................................................................
+
+
+
+
+
+
+ALTER proc [dbo].[RSP_QUOTATION_INVOICE_GK]
+
+@QUOTATION_INVOICE_NO NVARCHAR(30),
+@COMPANY_ID varchar(10),
+@BRANCH_ID varchar(10)
+--@GIVEN_AMOUNT NVARCHAR(30),
+--@CHANGE_AMOUNT NVARCHAR(30)
+as
+
+
+SELECT     S.QUOTATION_INVOICE_NO as SALES_INVOICE_NO, S.TOTAL_AMOUNT, S.TOTAL_VAT, S.PREVIOUS_DUES, 
+S.TOTAL_DISCOUNT, S.COLLECTED_AMOUNT,
+						case when (S.BUYER_SUPPLIER_ID=1)
+                      Then S.BUYER_SUPPLIER_ID
+                      else
+                      B.PHONE end as UNIT_ID,
+                      S.BUYER_SUPPLIER_ID, S.MAKE_BY, S.MAKE_DT, 
+                      
+                      rs.RESTURANT_TABLE_NAME as RETURN_FLAG, 
+                      B.MEMBER_ID as COMPANY_ID,
+                      case when (S.BUYER_SUPPLIER_ID=1)
+                      Then B.BUYER_SUPPLIER_NAME 
+                      else B.BUYER_SUPPLIER_NAME end
+                      as CANCEL_FLAG,                  
+                       case when (S.BUYER_SUPPLIER_ID=1)
+                      Then B.BUYER_SUPPLIER_NAME
+                      else B.BUYER_SUPPLIER_NAME end
+                      as BUYER_SUPPLIER_NAME,
+                       c.ADDRESS, C.COMPANY_NAME,C.ADDRESS, 
+                      C.PHONE as PHONE, C.FAX, C.EMAIL, C.URL, SD.PRODUCT_CODE,
+                      --s.REMARKS,
+                      U.UNIT_NAME,
+                      case when (SD.QUANTITY<0) Then P.PRODUCT_NAME+' (Return Product)' else P.PRODUCT_NAME end PRODUCT_NAME,
+                        BR.BRAND_NAME, p.PRODUCT_DESCRIPTION,
+                        
+                      SD.QUANTITY, SD.QUOTATION_PRICE, SD.QUOTATION_DISCOUNT as QUOTATION_VAT,ac.DESCRIPTION as SERIAL_AVAILABLE,
+                      SD.QUOTATION_VAT_AMOUNT_TOTAL,(SD.QUOTATION_PRICE*ABS(SD.QUANTITY))PRODUCTWISE_TOTAL,
+						(S.TOTAL_AMOUNT+TOTAL_VAT-TOTAL_DISCOUNT)GRAND_TOTAL,(S.TOTAL_AMOUNT+TOTAL_VAT-COLLECTED_AMOUNT-TOTAL_DISCOUNT+PREVIOUS_DUES)DUE,
+					 
+case when (S.BUYER_SUPPLIER_ID=1)
+                      Then '' 
+                      else B.ADDRESS end as ADDRESS2,
+BB.BRANCH_NAME,BB.BRANCH_ADDRESS
+FROM         
+                      QUOTATION S INNER JOIN
+                      QUOTATION_DETAILS SD ON S.QUOTATION_INVOICE_NO = SD.QUOTATION_INVOICE_NO 
+                      and  S.COMPANY_ID=SD.COMPANY_ID AND S.BRANCH_ID=SD.BRANCH_ID
+                      INNER JOIN
+                      BUYER_SUPPLIER_INFO B ON S.BUYER_SUPPLIER_ID = B.BUYER_SUPPLIER_ID 
+                      and  S.COMPANY_ID=B.COMPANY_ID AND S.BRANCH_ID=B.BRANCH_ID
+					  INNER JOIN COMPANY C 	ON 
+                      C.COMPANY_ID = S.COMPANY_ID INNER JOIN
+                      PRODUCT P ON SD.PRODUCT_CODE = P.PRODUCT_CODE 
+                      and  SD.COMPANY_ID=P.COMPANY_ID AND SD.BRANCH_ID=P.BRANCH_ID
+                      INNER JOIN
+                      PRODUCT_UNIT_TYPES U ON SD.UNIT_ID = U.UNIT_ID 
+                      and  SD.COMPANY_ID=U.COMPANY_ID 
+                      INNER JOIN
+                      PRODUCT_BRAND BR ON P.BRAND_ID = BR.BRAND_ID
+                      and  P.COMPANY_ID=BR.COMPANY_ID 
+					 
+					  INNER JOIN BRANCH BB ON S.BRANCH_ID=BB.BRANCH_ID 
+					  AND S.COMPANY_ID=BB.COMPANY_ID
+					  inner join ACCOUNTS ac on s.COLLECTED_ACCOUNT_ID=ac.ACCOUNTS_CODE 
+					  AND S.COMPANY_ID=ac.COMPANY_ID AND S.BRANCH_ID=ac.BRANCH_ID
+					  LEFT OUTER JOIN RESTURANT_TABLE rs on s.RESTURANT_TABLE_ID = rs.RESTURANT_TABLE_ID
+						AND S.COMPANY_ID=rs.COMPANY_ID AND S.BRANCH_ID=rs.BRANCH_ID
+WHERE S.QUOTATION_INVOICE_NO=@QUOTATION_INVOICE_NO and s.COMPANY_ID=@COMPANY_ID AND S.BRANCH_ID=@BRANCH_ID
+
+order by sd.QUOTATION_DETAILS_ID DESC

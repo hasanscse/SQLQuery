@@ -1,0 +1,13 @@
+
+
+
+create proc [dbo].[FSP_ACCOUNTS_EXPENSE_GA]
+ @COMPANY_ID nvarchar(10),
+  @BRANCH_ID nvarchar(10)
+AS 
+
+select * from ACCOUNTS where IS_ACTIVE=1 and COMPANY_ID=@COMPANY_ID and BRANCH_ID=@BRANCH_ID
+AND GROUP_CODE='904'
+order by DESCRIPTION ASC
+
+
